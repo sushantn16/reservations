@@ -16,12 +16,14 @@ import {
 } from "~/@/components/select"
 import { Badge } from "~/@/components/badge"
 import { Label } from "~/@/components/label"
+import { api } from "~/trpc/react";
 
 const Reservation = () => {
     const [page, setPage] = useState(1)
     const [date, setDate] = useState<Date>()
     const [time, setTime] = useState('')
     const [people, setPeople] = useState('');
+    const [request, setRequest] = useState('')
 
 
     const allTimes = ['7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00PM'];
@@ -30,7 +32,25 @@ const Reservation = () => {
     }
 
     const handleSubmitButton = () => {
+        console.log({
+            date: date?.toString()??'',
+            time: time,
+            people: Number(people),
+            request: request
+        });
+        createReservation.mutate({
+            date: date?.toString()??'',
+            time: time,
+            people: Number(people),
+            request: request
+        })
     }
+
+    const createReservation = api.reservation.makeReservation.useMutation({
+        onSuccess: () => {
+            console.log('success')
+        },
+    });
 
     return (
         <div className="flex min-h-screen">
@@ -81,7 +101,7 @@ const Reservation = () => {
                         </div>
                         <div className="mt-10">
                             <Label htmlFor="textarea" >Have some special requests? add here.</Label>
-                            <Textarea />
+                            <Textarea value={request} onChange={e => setRequest(e.target.value)} />
                         </div>
                     </div>}
                 <div className="">
