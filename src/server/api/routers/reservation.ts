@@ -15,6 +15,7 @@ export const reservationRouter = createTRPCRouter({
                 date: z.string(), // You might want to use a more specific date type
                 request: z.string(),
                 people: z.number().min(1),
+                mobile: z.string(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -26,6 +27,7 @@ export const reservationRouter = createTRPCRouter({
                     date: new Date(input.date), // Convert date string to Date object
                     request: input.request,
                     people: (input.people).toString(),
+                    mobile: (input.mobile),
                 },
             });
         }),

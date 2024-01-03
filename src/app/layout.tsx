@@ -6,6 +6,8 @@ import { cn } from "../@/lib/utils"
 import Header from "./Header";
 import Provider from "./Provider";
 import { getServerAuthSession } from "~/server/auth";
+import { Toaster } from "~/@/components/sonner";
+
 
 
 const fontSans = FontSans({
@@ -36,6 +38,7 @@ export default async function RootLayout({
           <Provider session={session}>
           <Header/>
           {children}
+          <Toaster/>
           </Provider>
         </TRPCReactProvider>
       </body>

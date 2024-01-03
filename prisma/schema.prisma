@@ -81,4 +81,5 @@ model Reservation {
   date    DateTime
   request String
   people  String
+  mobile  String
 }
