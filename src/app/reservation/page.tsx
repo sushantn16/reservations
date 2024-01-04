@@ -1,30 +1,44 @@
-"use client"
-import React, { useState } from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Rocket } from "lucide-react"
-import { Calendar } from "~/@/components/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "~/@/components/popover"
-import { cn } from "~/@/lib/utils"
-import { Button } from "~/@/components/button"
-import { Textarea } from "~/@/components/textarea"
+"use client";
+import React, { useState } from "react";
+import { format, isToday } from "date-fns";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar } from "~/@/components/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "~/@/components/popover";
+import { cn } from "~/@/lib/utils";
+import { Button } from "~/@/components/button";
+import { Textarea } from "~/@/components/textarea";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "~/@/components/select"
-import { Badge } from "~/@/components/badge"
-import { Label } from "~/@/components/label"
+} from "~/@/components/select";
+import { Badge } from "~/@/components/badge";
+import { Label } from "~/@/components/label";
 import { api } from "~/trpc/react";
-import { Input } from "~/@/components/input"
+import { Input } from "~/@/components/input";
 import { PhoneInput } from 'react-international-phone';
-import { RadioGroup, RadioGroupItem } from "~/@/components/radio-group"
+import { RadioGroup, RadioGroupItem } from "~/@/components/radio-group";
 import 'react-international-phone/style.css';
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { Card } from "~/@/components/card";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "~/@/components/tooltip";
 
-
-
+interface ReservationData {
+    id: number;
+    date: Date;
+    time: string;
+    people: string;
+    request: string;
+    mobile: string;
+}
 
 const Reservation = () => {
     const [page, setPage] = useState(1);
@@ -33,30 +47,28 @@ const Reservation = () => {
     const [people, setPeople] = useState('');
     const [request, setRequest] = useState('');
     const [mobile, setMobile] = useState('');
-    // const phoneUtil = PhoneNumberUtil.getInstance();
-
+    const { data: session } = useSession();
 
     const allTimes = ['7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00PM'];
+
     const handleNextButton = () => {
         const isValid = validateData()
         if (isValid) {
             setPage(2);
         }
     }
+
     const handleBackButton = () => {
         setPage(1);
     }
 
     const handleSubmitButton = () => {
         const isValid = validateData();
+        if (!session) {
+            toast.error("Please login to make reservation");
+            return;
+        }
         if (isValid) {
-            console.log({
-                date: date?.toString() ?? '',
-                time: selectedTime,
-                people: Number(people),
-                request: request,
-                mobile: mobile
-            });
             createReservation.mutate({
                 date: date?.toString() ?? '',
                 time: selectedTime,
@@ -67,36 +79,103 @@ const Reservation = () => {
         }
     }
 
+    const todayReservations: ReservationData[] = [];
+    const upcomingReservations: ReservationData[] = [];
+    const expiredReservations: ReservationData[] = [];
+
+    const fetchPreviousReservations = api.reservation.getReservationsByUserId.useQuery()
+    const reservations = fetchPreviousReservations.data || [];
+    reservations.forEach((data) => {
+        const currentDate = new Date().setHours(0, 0, 0, 0);
+        const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
+
+        if (reservationDate === currentDate) {
+            todayReservations.push(data);
+        } else if (reservationDate > currentDate) {
+            upcomingReservations.push(data);
+        } else {
+            expiredReservations.push(data);
+        }
+    });
+
+    const cancelReservation = api.reservation.cancelReservation.useMutation({
+        onSuccess: () => {
+            toast.success("Reservation has been cancelled")
+            fetchPreviousReservations.refetch()
+        },
+        onError: () => {
+            toast.error("Some problem with reservation")
+        }
+    })
+
+    const handleReservationCancellation = (id: number) => {
+        cancelReservation.mutate({ id: id })
+    }
+
     const validateData = () => {
         if (!date) {
-            toast("Please select a date for reservation");
+            toast.error("Please select a date for reservation");
             return false;
         }
         if (!people) {
-            toast("Please select number of people you want to make a reservation for");
+            toast.error("Please select the number of people you want to make a reservation for");
             return false;
         }
         if (page === 1) {
             return true;
         } else {
             if (!selectedTime) {
-                toast("Please select a time for reservation");
+                toast.error("Please select a time for reservation");
                 return false;
             }
             if (mobile.length < 12) {
-                toast("Please enter a valid phone number");
+                toast.error("Please enter a valid phone number");
                 return false;
             }
             return true;
         }
-
     }
 
     const createReservation = api.reservation.makeReservation.useMutation({
         onSuccess: () => {
-            console.log('success')
+            toast.success("Reservation is made")
+            fetchPreviousReservations.refetch()
         },
+        onError: () => {
+            toast.error("Some problem with reservation")
+        }
     });
+
+    const reservationsCard = (data: ReservationData) => {
+        return (
+            <Card className="w-full p-2 m-4 flex items-center justify-between">
+                <Badge variant="default" className='rounded p-2 m-3'>
+                    {isToday(new Date(data.date)) ? "Today" : new Date(data.date).setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0) ? "Upcoming" : "Expired"}
+                </Badge>
+                <Badge variant="outline" className='rounded p-2 m-3'>
+                    <Label htmlFor={data.time}>
+                        {data.time}
+                    </Label>
+                </Badge>
+                <Badge variant="outline" className='rounded p-2 m-3'>
+                    {data.date.toDateString()}
+                </Badge>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <Badge variant="outline" className='rounded p-2 m-3'>
+                                {data.people}
+                            </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            Number of people
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <Button variant="secondary" className="m-3 hover:bg-primary hover:text-primary-foreground" disabled={new Date(data.date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0)} onClick={() => handleReservationCancellation(data.id)} >Cancel Reservation</Button>
+            </Card>
+        )
+    }
 
     return (
         <div className="flex" style={{ height: 'calc(100vh - 64px)' }}>
@@ -106,33 +185,33 @@ const Reservation = () => {
                         <div className="my-10">
                             <Label htmlFor="calendar">Please choose a date</Label>
                             <div className="m-3">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-[240px] justify-start text-left font-normal rounded",
-                                            !date && "text-muted-foreground"
-                                        )} >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={setDate}
-                                        initialFocus
-                                        className="bg-white"
-                                        required
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-[240px] justify-start text-left font-normal rounded",
+                                                !date && "text-muted-foreground"
+                                            )} >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={setDate}
+                                            initialFocus
+                                            className="bg-white"
+                                            required
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
                         <div className="my-10">
-                        <Label htmlFor="calendar">Please choose number of people</Label>
+                            <Label htmlFor="calendar">Please choose the number of people</Label>
                             <Select onValueChange={setPeople}>
                                 <SelectTrigger className="w-[240px] m-3">
                                     <SelectValue placeholder="Number of people" />
@@ -150,18 +229,15 @@ const Reservation = () => {
                         <div className="my-10">
                             <Label htmlFor="timeslot">Please select your time slot</Label>
                             <RadioGroup className="flex flex-wrap" value={selectedTime} onValueChange={setTime}>
-
-                                {
-                                    allTimes.map((time, i) => (
-                                        <div key={i}>
-                                            <Badge variant="outline" className={time === selectedTime ? 'border-black rounded p-2 m-3 flex-wrap' : 'rounded p-2 m-3 flex-wrap'}>
-                                                <Label htmlFor={time}>
-                                                    {time}<RadioGroupItem className="hidden" value={time} id={time} />
-                                                </Label>
-                                            </Badge>
-                                        </div>
-
-                                    ))}
+                                {allTimes.map((time, i) => (
+                                    <div key={i}>
+                                        <Badge variant="outline" className={time === selectedTime ? 'border-black rounded p-2 m-3 flex-wrap' : 'rounded p-2 m-3 flex-wrap'}>
+                                            <Label htmlFor={time}>
+                                                {time}<RadioGroupItem className="hidden" value={time} id={time} />
+                                            </Label>
+                                        </Badge>
+                                    </div>
+                                ))}
                             </RadioGroup>
                         </div>
 
@@ -170,7 +246,7 @@ const Reservation = () => {
                             <PhoneInput className="m-3" value={mobile} onChange={e => setMobile(e)} />
                         </div>
                         <div className="my-10">
-                            <Label htmlFor="textarea" >Have some special requests? add here.</Label>
+                            <Label htmlFor="textarea" >Have some special requests? Add here.</Label>
                             <Textarea className="m-3 w-2/3" id="textarea" value={request} onChange={e => setRequest(e.target.value)} />
                         </div>
                     </div>}
@@ -191,12 +267,46 @@ const Reservation = () => {
                             </Button>
                         </div>
                     }
-
                 </div>
 
             </div>
-            <div className="w-1/2 p-5 text-8xl items-center text-center">Make a Reservation today to enjoy the culinary retreat.</div>
+            {
+                reservations.length === 0 &&
+                <div className="w-1/2 p-5 text-8xl items-center text-center">Make a Reservation today to enjoy the culinary retreat.</div>
+            }
+            {reservations.length > 0 &&
+                <div>
+                    {
+                        todayReservations.length > 0 &&
+                        <div>
+                            <h2>Today's Reservations</h2>
+                            {todayReservations.map(data => (
+                                reservationsCard(data)
+                            ))}
+                        </div>
+                    }
+                    {
+                        upcomingReservations.length > 0 &&
+                        <div>
+                            <h2>Upcoming Reservations</h2>
+                            {upcomingReservations.map(data => (
+                                reservationsCard(data)
+                            ))}
+                        </div>
+                    }
+                    {
+                        expiredReservations.length > 0 &&
+                        <div>
+                            <h2>Expired Reservations</h2>
+                            {expiredReservations.map(data => (
+                                reservationsCard(data)
+                            ))}
+                        </div>
+                    }
+                </div>
+            }
         </div>
     )
 }
+
 export default Reservation;

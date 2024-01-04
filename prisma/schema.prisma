@@ -63,6 +63,8 @@ model User {
   sessions      Session[]
   posts         Post[]
   reservations  Reservation[]
+  orders        Orders[]
+  address       Address[]
 }
 
 model VerificationToken {
@@ -82,4 +84,32 @@ model Reservation {
   request String
   people  String
   mobile  String
+}
+
+model Orders {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  mobile    String
+  order     String
+  compeleted Boolean
+}
+
+model Menu{
+  id        Int      @id @default(autoincrement())
+  name      String
+  description String    
+  image     String
+  available Boolean
+}
+
+model Address{
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  house     String
+  street    String
+  pin       String
+  city      String
 }

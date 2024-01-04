@@ -45,4 +45,16 @@ export const reservationRouter = createTRPCRouter({
             where: { userId: ctx.session.user.id },
         });
     }),
+    cancelReservation: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const reservation = await ctx.db.reservation.findUnique({
+        where: { id: input.id, userId: ctx.session.user.id },
+      });
+      if (!reservation) {
+        throw new Error("Reservation not found");
+      }
+      await ctx.db.reservation.delete({ where: { id: reservation.id } });
+      return { success: true };
+    }),
 });

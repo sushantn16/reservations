@@ -38,7 +38,7 @@ export default async function RootLayout({
           <Provider session={session}>
           <Header/>
           {children}
-          <Toaster/>
+          <Toaster position="top-left"/>
           </Provider>
         </TRPCReactProvider>
       </body>
