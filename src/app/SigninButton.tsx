@@ -31,7 +31,7 @@ export const SigninButton = () => {
                 <DropdownMenuTrigger>
                     <Avatar>
                         <AvatarImage src={session?.user.image ?? ''} />
-                        <AvatarFallback>CN</AvatarFallback>
+                        <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -40,7 +40,6 @@ export const SigninButton = () => {
                         }
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <>
                         {session &&
                             <>
                                 <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
@@ -49,14 +48,9 @@ export const SigninButton = () => {
                                 </DropdownMenuItem>
                             </>
                         }
-                    </>
-
-                    <DropdownMenuItem>
-                        <Button onClick={handleUserAccountButton} variant="link">{session ? "Sign out" : "Sign in"}
-                        </Button></DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleUserAccountButton}>{session ? "Sign out" : "Sign in"}</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
         </div>
     )
 

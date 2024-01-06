@@ -87,29 +87,45 @@ model Reservation {
 }
 
 model Orders {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  mobile    String
-  order     String
-  compeleted Boolean
+  id         Int         @id @default(autoincrement())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+  createdAt  DateTime    @default(now())
+  mobile     String
+  order      String
+  completed  Boolean
+  orderItems OrderItem[]
 }
 
-model Menu{
-  id        Int      @id @default(autoincrement())
-  name      String
-  description String    
-  image     String
-  available Boolean
+model MenuItem {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String
+  image       String
+  available   Boolean
+  category    String
+  price       Int
+  orderItems  OrderItem[]
 }
 
-model Address{
-  id        Int      @id @default(autoincrement())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  house     String
-  street    String
-  pin       String
-  city      String
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Orders   @relation(fields: [orderId], references: [id])
+  menuItemId Int
+  quantity   Int
+  total      Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@unique([orderId, menuItemId])
+}
+
+model Address {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  house  String
+  street String
+  pin    String
+  city   String
 }

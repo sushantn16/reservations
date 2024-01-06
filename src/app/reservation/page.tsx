@@ -85,7 +85,7 @@ const Reservation = () => {
 
     const fetchPreviousReservations = api.reservation.getReservationsByUserId.useQuery()
     const reservations = fetchPreviousReservations.data || [];
-    reservations.forEach((data) => {
+    reservations.forEach((data:any) => {
         const currentDate = new Date().setHours(0, 0, 0, 0);
         const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
 
