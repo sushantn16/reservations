@@ -38,9 +38,18 @@ const ManageMenu = () => {
         setFormData({ ...formData, price: parseFloat(e.target.value) });
     }
 
-    const handleSwitchChange = () => {
-        setFormData({ ...formData, available: !formData.available });
+    const handleSwitchChange = (value:boolean, id:number ) => {
+        updateAvailability.mutate({itemId:id,
+            available:value
+        })
     };
+
+    const updateAvailability = api.menu.updateMenuItemAvailability.useMutation({
+        onSuccess: () => {
+            toast.success("Availability has been updated");
+            menuItems.refetch()
+        },
+    })
 
     const submitMenuItem = api.menu.addMenuItem.useMutation({
         onSuccess: () => {
@@ -68,7 +77,7 @@ const ManageMenu = () => {
                 filename: file.name,
                 data: file
             });
-            submitMenuItem.mutate({ ...formData, image:uploadedFile.blobUrl});
+            submitMenuItem.mutate({ ...formData, image: uploadedFile.blobUrl });
         }
     };
 
@@ -143,15 +152,6 @@ const ManageMenu = () => {
                         />
                     </div>
                     <div className="m-5 flex items-center">
-                        <Label htmlFor="availability">Availability</Label>
-                        <Switch
-                            className="ml-5"
-                            id="availability"
-                            checked={formData.available}
-                            onChange={handleSwitchChange}
-                        />
-                    </div>
-                    <div className="m-5 flex items-center">
                         <Select onValueChange={(value) => setFormData({ ...formData, category: value })}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Category" />
@@ -179,12 +179,20 @@ const ManageMenu = () => {
                                 {data.available ? "available" : "Not available"}
                             </Badge>
                         </CardTitle>
-                        <CardContent>
-                            {data.description}
+                        <CardContent className="flex justify-between">
+                            <p>{data.description}</p>
+                            <img src={data.image} alt={data.name} />
                         </CardContent>
-                        <img src={data.image}       width={500}
-      height={500}
-      alt="Picture of the author"/>
+                        <div className="m-5 flex items-center">
+                            <Label htmlFor="availability">Availability</Label>
+                            <Switch
+                                className="ml-5"
+                                id="availability"
+                                checked={data.available}
+                                onCheckedChange={(value)=>handleSwitchChange(value, data.id)}
+                            />
+                        </div>
+
                         <CardFooter>
                             <Button onClick={() => handleDeleteMenuItem(data.id)}>Delete</Button>
                         </CardFooter>

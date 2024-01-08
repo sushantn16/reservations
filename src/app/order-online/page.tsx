@@ -12,12 +12,14 @@ type Counts = Record<number, number>;
 
 const OrderOnline = () => {
     const [counts, setCounts] = useState<Counts>({});
+    const [total, setTotal] = useState<number>(0);
 
     const handleCounterChange = (id: number, value: number) => {
         setCounts((prevCounts) => ({
             ...prevCounts,
             [id]: value >= 0 ? value : 0,
         }));
+        calculateTotal();
     };
 
     const getItemsInCart = () => {
@@ -34,15 +36,23 @@ const OrderOnline = () => {
             .filter((cartItem): cartItem is NonNullable<typeof cartItem> => cartItem !== null);
     };
 
+    const calculateTotal = () => {
+        const itemsInCart = getItemsInCart();
+        const totalAmount = itemsInCart.reduce((total, cartItem) => {
+            return total + cartItem.price * cartItem.quantity;
+        }, 0);
+        setTotal(totalAmount);
+    };
+
     const renderCounter = (id: number) => {
         const count = counts[id] || 0;
         return (
-            <div className="flex">
-                <Button variant="outline" size="icon" onClick={() => handleCounterChange(id, count - 1)}>
+            <div className="flex items-center">
+                <Button size="icon" className="m-2" onClick={() => handleCounterChange(id, count - 1)}>
                     <Minus />
                 </Button>
                 <Input value={count} readOnly className="w-10" />
-                <Button variant="outline" size="icon" onClick={() => handleCounterChange(id, count + 1)}>
+                <Button size="icon" className="m-2" onClick={() => handleCounterChange(id, count + 1)}>
                     <Plus />
                 </Button>
             </div>
@@ -60,7 +70,7 @@ const OrderOnline = () => {
         onSuccess: () => {
             toast.success("Order item has been added");
         },
-    })
+    });
 
     const submitOrder = async () => {
         const selectedItems = Object.entries(counts)
@@ -71,63 +81,64 @@ const OrderOnline = () => {
             // Handle the case where no items are selected
             return;
         }
+        createOrder.mutate({
+            mobile: "1234567890", // Replace with the actual mobile number
+            order: "Online Order", // Replace with the order details
+            completed: false,
+            orderItems: selectedItems,
+        });
 
-        try {
-            await createOrder.mutate({
-                mobile: "1234567890", // Replace with the actual mobile number
-                order: "Online Order", // Replace with the order details
-                completed: false,
-                orderItems: selectedItems,
-            });
-
-            // Order submitted successfully, you can show a success message or redirect
-            console.log("Order submitted successfully!");
-        } catch (error) {
-            // Handle the error (e.g., show an error message)
-            console.error("Error submitting order:", error);
-        }
+        calculateTotal();
     };
 
     return (
-        <>
-            {menuItemData.map((data: any) => (
-                <Card key={data.id} className="p-2 m-4 w-1/3">
-                    <CardTitle className="flex justify-between items-center">
-                        {data.name}
-                        <Badge variant="outline" className="rounded p-2">
-                            {data.available ? "available" : "Not available"}
-                        </Badge>
-                    </CardTitle>
-                    <CardContent>{data.description}</CardContent>
-                    <CardFooter className="flex justify-between p-0">
-                        {renderCounter(data.id)}
-                        <div className="flex space-x-2">
-                            <Button disabled={counts[data.id] == 0 || counts[data.id] == undefined} variant={"secondary"} onClick={() => removeFromCart(data.id)}>Remove</Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-            ))}
-            <div className="mt-4">
-                <h2>Your Cart</h2>
-                {getItemsInCart().map((cartItem) => (
-                    <div key={cartItem.id} className="flex justify-between items-center p-2 border-b">
-                        <div>
-                            <strong>{cartItem.name}</strong> - Quantity: {cartItem.quantity}
-                        </div>
-                        <Button
-                            variant="secondary"
-                            onClick={() => removeFromCart(cartItem.id)}
-                        >
-                            Remove
-                        </Button>
-                    </div>
+        <div className="flex p-5">
+            <div className="w-2/3">
+                {menuItemData.map((data: any) => (
+                    <Card key={data.id} className="flex p-2 m-4 justify-between">
+                        <CardContent>
+                            <CardTitle className="flex justify-between items-center">
+                                {data.name}
+                                <Badge variant="outline" className="rounded p-2">
+                                    {data.available ? "available" : "Not available"}
+                                </Badge>
+                            </CardTitle>
+                            {data.description}
+                        </CardContent>
+                        <CardContent className="flex p-0 items-center">
+                            <div className="mr-10">{data.price}</div>
+                            {renderCounter(data.id)}
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
-
-            <div className="flex justify-center mt-4">
-                <Button onClick={submitOrder}>Submit Order</Button>
+            <div className="w-1/3 m-4">
+                {getItemsInCart().length > 0 &&
+                    <Card>
+                        <CardTitle className="p-6">Your Cart</CardTitle>
+                        <CardContent>
+                            {getItemsInCart().map((cartItem) => (
+                                <div key={cartItem.id} className="flex justify-between items-center p-2 border-b">
+                                    <div>
+                                        <strong>{cartItem.name} </strong>- {cartItem.price} x {cartItem.quantity}
+                                    </div>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => removeFromCart(cartItem.id)}
+                                    >
+                                        Remove
+                                    </Button>
+                                </div>
+                            ))}
+                            <p className="flex justify-end mt-4">Total: {total}</p>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button onClick={submitOrder}>Submit Order</Button>
+                        </CardFooter>
+                    </Card>
+                }
             </div>
-        </>
+        </div>
     );
 };
 
