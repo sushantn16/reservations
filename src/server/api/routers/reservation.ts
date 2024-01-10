@@ -57,4 +57,8 @@ export const reservationRouter = createTRPCRouter({
       await ctx.db.reservation.delete({ where: { id: reservation.id } });
       return { success: true };
     }),
+    
+    getAllReservations: protectedProcedure.query(async ({ctx})=>{
+        return ctx.db.reservation.findMany();
+    })
 });

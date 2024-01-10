@@ -85,22 +85,28 @@ const Reservation = () => {
 
     const fetchPreviousReservations = api.reservation.getReservationsByUserId.useQuery()
     const reservations = fetchPreviousReservations.data || [];
-    const totalPeopleMap = new Map<string, number>(
-        allTimes.reduce((acc, time) => {
-            acc.set(time, 0);
-            return acc;
-        }, new Map<string, number>())
-    );
 
+    const fetchAllReservations = api.reservation.getAllReservations.useQuery();
+    const allReservations = fetchAllReservations.data || [];
 
-    reservations.forEach((data: ReservationData) => {
+    const reservationsForSelectedDate = allReservations.filter((data: ReservationData) => {
+        const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
+        const selectedDate = date ? new Date(date).setHours(0, 0, 0, 0) : undefined;
+
+        return selectedDate === reservationDate;
+    });
+
+    const totalPeopleMap = new Map<string, number>(allTimes.reduce((acc, time) => { acc.set(time, 0); return acc; }, new Map<string, number>()));
+
+    reservationsForSelectedDate.forEach((data: ReservationData) => {
         const time = data.time;
         const totalPeople = totalPeopleMap.get(time) || 0;
         totalPeopleMap.set(time, totalPeople + Number(data.people));
-        console.log(totalPeopleMap);
+    });
+
+    reservations.forEach((data: ReservationData) => {
         const currentDate = new Date().setHours(0, 0, 0, 0);
         const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
-
         if (reservationDate === currentDate) {
             todayReservations.push(data);
         } else if (reservationDate > currentDate) {
@@ -246,9 +252,9 @@ const Reservation = () => {
                                         <Badge
                                             variant="outline"
                                             className={`rounded p-2 m-3 flex-wrap ${(totalPeopleMap.get(time) ?? 0) > 10 ? 'text-gray-300 cursor-not-allowed' :
-                                                    (totalPeopleMap.get(time) ?? 0) > 8 ? 'text-red-500' :
-                                                        (totalPeopleMap.get(time) ?? 0) > 5 ? 'text-yellow-500' :
-                                                            ''} ${time === selectedTime ? 'border-black' : ''
+                                                (totalPeopleMap.get(time) ?? 0) > 8 ? 'text-red-500' :
+                                                    (totalPeopleMap.get(time) ?? 0) > 5 ? 'text-yellow-500' :
+                                                        ''} ${time === selectedTime ? 'border-black' : ''
                                                 }`}
                                         >
                                             {/* {time === selectedTime ? 'border-black rounded p-2 m-3 flex-wrap' : 'rounded p-2 m-3 flex-wrap'}> */}
@@ -295,35 +301,35 @@ const Reservation = () => {
                 <div className="w-1/2 p-5 text-8xl items-center text-center">Make a Reservation today to enjoy the culinary retreat.</div>
             }
             {reservations.length > 0 &&
-                <>
+                <div>
                     {
                         todayReservations.length > 0 &&
-                        <>
+                        <div>
                             <h2>Today's Reservations</h2>
                             {todayReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </>
+                        </div>
                     }
                     {
                         upcomingReservations.length > 0 &&
-                        <>
+                        <div>
                             <h2>Upcoming Reservations</h2>
                             {upcomingReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </>
+                        </div>
                     }
                     {
                         expiredReservations.length > 0 &&
-                        <>
+                        <div>
                             <h2>Expired Reservations</h2>
                             {expiredReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </>
+                        </div>
                     }
-                </>
+                </div>
             }
         </div>
     )
