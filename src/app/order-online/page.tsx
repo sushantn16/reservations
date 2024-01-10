@@ -7,6 +7,7 @@ import { Button } from "~/@/components/button";
 import { Minus, Plus } from "lucide-react";
 import { Input } from "~/@/components/input";
 import { useState } from "react";
+import SigninDrawer from "../Signin";
 
 type Counts = Record<number, number>;
 
@@ -93,6 +94,7 @@ const OrderOnline = () => {
 
     return (
         <div className="flex p-5">
+            <SigninDrawer/>
             <div className="w-2/3">
                 {menuItemData.map((data: any) => (
                     <Card key={data.id} className="flex p-2 m-4 justify-between">

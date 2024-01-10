@@ -2,34 +2,23 @@
 import React, { useState } from "react";
 import { format, isToday } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
-import { Calendar } from "~/@/components/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "~/@/components/popover";
-import { cn } from "~/@/lib/utils";
-import { Button } from "~/@/components/button";
-import { Textarea } from "~/@/components/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "~/@/components/select";
-import { Badge } from "~/@/components/badge";
-import { Label } from "~/@/components/label";
-import { api } from "~/trpc/react";
-import { Input } from "~/@/components/input";
 import { PhoneInput } from 'react-international-phone';
-import { RadioGroup, RadioGroupItem } from "~/@/components/radio-group";
 import 'react-international-phone/style.css';
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { Card } from "~/@/components/card";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "~/@/components/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/@/components/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/@/components/select";
+import { Popover, PopoverContent, PopoverTrigger } from "~/@/components/popover";
+import { RadioGroup, RadioGroupItem } from "~/@/components/radio-group";
+import { Calendar } from "~/@/components/calendar";
+import { cn } from "~/@/lib/utils";
+import { Button } from "~/@/components/button";
+import { Textarea } from "~/@/components/textarea";
+import { Badge } from "~/@/components/badge";
+import { Label } from "~/@/components/label";
+import { api } from "~/trpc/react";
+import SigninDrawer from "../Signin";
 
 interface ReservationData {
     id: number;
@@ -197,6 +186,7 @@ const Reservation = () => {
 
     return (
         <div className="flex" style={{ height: 'calc(100vh - 64px)' }}>
+            <SigninDrawer />
             <div className="w-1/2 p-5 flex flex-col align-middle justify-between">
                 {page === 1 ?
                     <div className="p-5">
