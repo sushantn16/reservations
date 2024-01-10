@@ -85,7 +85,19 @@ const Reservation = () => {
 
     const fetchPreviousReservations = api.reservation.getReservationsByUserId.useQuery()
     const reservations = fetchPreviousReservations.data || [];
-    reservations.forEach((data:any) => {
+    const totalPeopleMap = new Map<string, number>(
+        allTimes.reduce((acc, time) => {
+            acc.set(time, 0);
+            return acc;
+        }, new Map<string, number>())
+    );
+
+
+    reservations.forEach((data: ReservationData) => {
+        const time = data.time;
+        const totalPeople = totalPeopleMap.get(time) || 0;
+        totalPeopleMap.set(time, totalPeople + Number(data.people));
+        console.log(totalPeopleMap);
         const currentDate = new Date().setHours(0, 0, 0, 0);
         const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
 
@@ -231,7 +243,15 @@ const Reservation = () => {
                             <RadioGroup className="flex flex-wrap" value={selectedTime} onValueChange={setTime}>
                                 {allTimes.map((time, i) => (
                                     <div key={i}>
-                                        <Badge variant="outline" className={time === selectedTime ? 'border-black rounded p-2 m-3 flex-wrap' : 'rounded p-2 m-3 flex-wrap'}>
+                                        <Badge
+                                            variant="outline"
+                                            className={`rounded p-2 m-3 flex-wrap ${(totalPeopleMap.get(time) ?? 0) > 10 ? 'text-gray-300 cursor-not-allowed' :
+                                                    (totalPeopleMap.get(time) ?? 0) > 8 ? 'text-red-500' :
+                                                        (totalPeopleMap.get(time) ?? 0) > 5 ? 'text-yellow-500' :
+                                                            ''} ${time === selectedTime ? 'border-black' : ''
+                                                }`}
+                                        >
+                                            {/* {time === selectedTime ? 'border-black rounded p-2 m-3 flex-wrap' : 'rounded p-2 m-3 flex-wrap'}> */}
                                             <Label htmlFor={time}>
                                                 {time}<RadioGroupItem className="hidden" value={time} id={time} />
                                             </Label>
@@ -275,35 +295,35 @@ const Reservation = () => {
                 <div className="w-1/2 p-5 text-8xl items-center text-center">Make a Reservation today to enjoy the culinary retreat.</div>
             }
             {reservations.length > 0 &&
-                <div>
+                <>
                     {
                         todayReservations.length > 0 &&
-                        <div>
+                        <>
                             <h2>Today's Reservations</h2>
                             {todayReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </div>
+                        </>
                     }
                     {
                         upcomingReservations.length > 0 &&
-                        <div>
+                        <>
                             <h2>Upcoming Reservations</h2>
                             {upcomingReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </div>
+                        </>
                     }
                     {
                         expiredReservations.length > 0 &&
-                        <div>
+                        <>
                             <h2>Expired Reservations</h2>
                             {expiredReservations.map(data => (
                                 reservationsCard(data)
                             ))}
-                        </div>
+                        </>
                     }
-                </div>
+                </>
             }
         </div>
     )
