@@ -7,7 +7,7 @@ export const blobUploadRouter = createTRPCRouter({
     .input(
       z.object({
         filename: z.string(),
-        data: z.any(),
+        data: z.instanceof(File),
       })
     )
     .mutation(async ({ input }) => {

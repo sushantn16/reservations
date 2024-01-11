@@ -38,7 +38,7 @@ const ManageMenu = () => {
         category: "",
         price: 0
     });
-    const inputFileRef = useRef<any>(null);
+    const inputFileRef = useRef<HTMLInputElement>(null);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,14 +60,14 @@ const ManageMenu = () => {
     };
 
     const updateAvailability = api.menu.updateMenuItemAvailability.useMutation({
-        onSuccess: () => {
-            toast.success("Availability has been updated");
-            menuItems.refetch()
+        onSuccess: async () => {
+          toast.success("Availability has been updated");
+          await menuItems.refetch();
         },
-    })
+      });      
 
     const submitMenuItem = api.menu.addMenuItem.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             setFormData({
                 name: "",
                 description: "",
@@ -76,23 +76,24 @@ const ManageMenu = () => {
                 price: 0
             })
             toast.success("Menu item has been added");
-            menuItems.refetch(); // Refetch data after adding a menu item
+            await menuItems.refetch(); // Refetch data after adding a menu item
         },
         onError: () => {
             toast.error("Some problem with adding a menu item");
         }
     });
 
-    const handleFormSubmit = async (e: React.SyntheticEvent) => {
-        const fileInput = inputFileRef.current;
-        e.preventDefault();
-        if (fileInput?.files && fileInput?.files.length > 0) {
-            const file = fileInput.files[0];
-            const uploadedFile = await uploadFile.mutateAsync({
-                filename: file.name,
-                data: file
-            });
-            submitMenuItem.mutate({ ...formData, image: uploadedFile.blobUrl });
+    const handleFormSubmit = async () => {
+        const files = inputFileRef.current?.files;
+        if (files && files.length > 0) {
+            const file = files[0]
+            if (file) {
+                const uploadedFile = await uploadFile.mutateAsync({
+                    filename: file.name,
+                    data: file
+                });
+                submitMenuItem.mutate({ ...formData, image: uploadedFile.blobUrl });
+            }
         }
     };
 
