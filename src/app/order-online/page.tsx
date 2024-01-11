@@ -11,6 +11,14 @@ import SigninDrawer from "../Signin";
 
 type Counts = Record<number, number>;
 
+interface menuItem {
+    id:number
+    name: string 
+    description: string
+    available: boolean 
+    price: number
+}
+
 const OrderOnline = () => {
     const [counts, setCounts] = useState<Counts>({});
     const [total, setTotal] = useState<number>(0);
@@ -25,7 +33,7 @@ const OrderOnline = () => {
 
     const getItemsInCart = () => {
         return Object.entries(counts)
-            .filter(([id, count]) => count > 0)
+            .filter(([, count]) => count > 0)
             .map(([id, count]) => {
                 const menuItem = menuItemData.find((item) => item.id === parseInt(id));
                 if (menuItem) {
@@ -46,7 +54,7 @@ const OrderOnline = () => {
     };
 
     const renderCounter = (id: number) => {
-        const count = counts[id] || 0;
+        const count = counts[id] ?? 0;
         return (
             <div className="flex items-center">
                 <Button size="icon" className="m-2" onClick={() => handleCounterChange(id, count - 1)}>
@@ -61,10 +69,10 @@ const OrderOnline = () => {
     };
 
     const menuItems = api.menu.getAllMenuItems.useQuery();
-    const menuItemData = menuItems.data || [];
+    const menuItemData = menuItems.data ?? [];
 
     const removeFromCart = (id: number) => {
-        handleCounterChange(id, (counts[id] || 0) - 1);
+        handleCounterChange(id, (counts[id] ?? 0) - 1);
     };
 
     const createOrder = api.orders.makeOrder.useMutation({
@@ -75,7 +83,7 @@ const OrderOnline = () => {
 
     const submitOrder = async () => {
         const selectedItems = Object.entries(counts)
-            .filter(([id, count]) => count > 0)
+            .filter(([ , count]) => count > 0)
             .map(([id, count]) => ({ menuItemId: parseInt(id), quantity: count }));
 
         if (selectedItems.length === 0) {
@@ -96,7 +104,7 @@ const OrderOnline = () => {
         <div className="flex p-5">
             <SigninDrawer/>
             <div className="w-2/3">
-                {menuItemData.map((data: any) => (
+                {menuItemData.map((data: menuItem) => (
                     <Card key={data.id} className="flex p-2 m-4 justify-between">
                         <CardContent>
                             <CardTitle className="flex justify-between items-center">

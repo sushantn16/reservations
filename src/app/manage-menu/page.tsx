@@ -10,7 +10,6 @@ import { Textarea } from "~/@/components/textarea";
 import { Card, CardContent, CardFooter, CardTitle } from "~/@/components/card";
 import { Badge } from "~/@/components/badge";
 import { api } from "~/trpc/react";
-import Image from 'next/image'
 import {
     Select,
     SelectContent,
@@ -18,6 +17,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from "~/@/components/select"
+import Image from "next/image";
+
+interface menuItem {
+    id: number
+    name: string
+    description: string
+    available: boolean
+    category: string
+    price: number
+    image: string
+}
 
 
 const ManageMenu = () => {
@@ -28,19 +38,24 @@ const ManageMenu = () => {
         category: "",
         price: 0
     });
-    const inputFileRef = useRef<any>();
+    const inputFileRef = useRef<any>(null);
 
-    const handleInputChange = (e: any) => {
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
-    const handlePriceChange = (e: any) => {
+    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, price: parseFloat(e.target.value) });
     }
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    const handleSwitchChange = (value:boolean, id:number ) => {
-        updateAvailability.mutate({itemId:id,
-            available:value
+    const handleSwitchChange = (value: boolean, id: number) => {
+        updateAvailability.mutate({
+            itemId: id,
+            available: value
         })
     };
 
@@ -71,7 +86,7 @@ const ManageMenu = () => {
     const handleFormSubmit = async (e: React.SyntheticEvent) => {
         const fileInput = inputFileRef.current;
         e.preventDefault();
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        if (fileInput?.files && fileInput?.files.length > 0) {
             const file = fileInput.files[0];
             const uploadedFile = await uploadFile.mutateAsync({
                 filename: file.name,
@@ -82,12 +97,12 @@ const ManageMenu = () => {
     };
 
     const menuItems = api.menu.getAllMenuItems.useQuery()
-    const menuItemData = menuItems.data || [];
+    const menuItemData = menuItems.data ?? [];
 
     const deleteMenuItem = api.menu.deleteMenuItem.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Menu item has been deleted");
-            menuItems.refetch(); // Refetch data after deleting a menu item
+            await menuItems.refetch(); // Refetch data after deleting a menu item
         },
         onError: () => {
             toast.error("Some problem with deleting a menu item");
@@ -126,7 +141,7 @@ const ManageMenu = () => {
                             placeholder="description"
                             name="description"
                             value={formData.description}
-                            onChange={handleInputChange}
+                            onChange={handleTextareaChange}
                             id="description"
                         />
                     </div>
@@ -171,8 +186,8 @@ const ManageMenu = () => {
 
             </div>
             <div className="flex flex-col w-1/2">
-                {menuItemData && menuItemData.map((data: any) =>
-                    <Card className="p-2 m-4 w-2/3">
+                {menuItemData?.map((data: menuItem, i: number) =>
+                    <Card key={i} className="p-2 m-4 w-2/3">
                         <CardTitle className="flex justify-between items-center">
                             {data.name}
                             <Badge variant="outline" className='rounded p-2'>
@@ -181,7 +196,7 @@ const ManageMenu = () => {
                         </CardTitle>
                         <CardContent className="flex justify-between">
                             <p>{data.description}</p>
-                            <img src={data.image} alt={data.name} />
+                            <Image src={data.image} alt={data.name} />
                         </CardContent>
                         <div className="m-5 flex items-center">
                             <Label htmlFor="availability">Availability</Label>
@@ -189,7 +204,7 @@ const ManageMenu = () => {
                                 className="ml-5"
                                 id="availability"
                                 checked={data.available}
-                                onCheckedChange={(value)=>handleSwitchChange(value, data.id)}
+                                onCheckedChange={(value) => handleSwitchChange(value, data.id)}
                             />
                         </div>
 

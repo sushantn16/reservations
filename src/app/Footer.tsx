@@ -1,5 +1,5 @@
 'use client'
-import Link from "next/link"
+import { Instagram } from "lucide-react";
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -7,45 +7,42 @@ import {
     NavigationMenuList,
     navigationMenuTriggerStyle
 } from "~/@/components/navigation-menu"
-import { SigninButton } from "./SigninButton"
+import Link from "next/link";
 
-
-const Header = () => {
-
-    return (
-        <div className="flex justify-between p-3">
-            <div className="flex items-center mx-5">
-                Beyond Butter Chicken
-            </div>
+const Footer = () => {
+    return(
+        <div className="m-5 flex justify-between">
+            <div>
             <NavigationMenu className="text-xl">
                 <NavigationMenuList>
                     <NavigationMenuItem>
-                        <Link href="/" legacyBehavior passHref>
+                        <Link href="/about-us" legacyBehavior passHref>
                             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                Home
+                                About Us
                             </NavigationMenuLink>
                         </Link>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                        <Link href="/reservation" legacyBehavior passHref>
+                        <Link href="/careers" legacyBehavior passHref>
                             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                Reservation
+                            Careers
                             </NavigationMenuLink>
                         </Link>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                        <Link href="/order-online" legacyBehavior passHref>
+                        <Link href="/contact" legacyBehavior passHref>
                             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                Order Online
+                            Contact Us
                             </NavigationMenuLink>
                         </Link>
                     </NavigationMenuItem>
                 </NavigationMenuList>
             </NavigationMenu>
-            <div>
-                <SigninButton/> 
+            </div>
+            <div className="flex">
+            Follow us on <Instagram className="ml-2"/>
             </div>
         </div>
     )
 }
-export default Header;
+export default Footer;

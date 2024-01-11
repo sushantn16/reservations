@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Button } from "~/@/components/button"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/@/components/avatar"
 signOut
@@ -16,11 +15,11 @@ import {
 export const SigninButton = () => {
     const { data: session } = useSession()
 
-    const handleUserAccountButton = () => {
+    const handleUserAccountButton = async () => {
         if (session) {
-            signOut();
+            await signOut();
         } else {
-            signIn()
+            await signIn()
         }
     }
 

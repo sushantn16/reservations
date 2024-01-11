@@ -73,10 +73,10 @@ const Reservation = () => {
     const expiredReservations: ReservationData[] = [];
 
     const fetchPreviousReservations = api.reservation.getReservationsByUserId.useQuery()
-    const reservations = fetchPreviousReservations.data || [];
+    const reservations = fetchPreviousReservations.data ?? [];
 
     const fetchAllReservations = api.reservation.getAllReservations.useQuery();
-    const allReservations = fetchAllReservations.data || [];
+    const allReservations = fetchAllReservations.data ?? [];
 
     const reservationsForSelectedDate = allReservations.filter((data: ReservationData) => {
         const reservationDate = new Date(data.date).setHours(0, 0, 0, 0);
@@ -89,7 +89,7 @@ const Reservation = () => {
 
     reservationsForSelectedDate.forEach((data: ReservationData) => {
         const time = data.time;
-        const totalPeople = totalPeopleMap.get(time) || 0;
+        const totalPeople = totalPeopleMap.get(time) ?? 0;
         totalPeopleMap.set(time, totalPeople + Number(data.people));
     });
 
@@ -106,9 +106,9 @@ const Reservation = () => {
     });
 
     const cancelReservation = api.reservation.cancelReservation.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Reservation has been cancelled")
-            fetchPreviousReservations.refetch()
+            await fetchPreviousReservations.refetch()
         },
         onError: () => {
             toast.error("Some problem with reservation")
@@ -144,18 +144,19 @@ const Reservation = () => {
     }
 
     const createReservation = api.reservation.makeReservation.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Reservation is made")
-            fetchPreviousReservations.refetch()
+            await fetchPreviousReservations.refetch()
         },
         onError: () => {
+
             toast.error("Some problem with reservation")
         }
     });
 
     const reservationsCard = (data: ReservationData) => {
         return (
-            <Card className="w-full p-2 m-4 flex items-center justify-between">
+            <Card key={data.id} className="w-full p-2 m-4 flex items-center justify-between">
                 <Badge variant="default" className='rounded p-2 m-3'>
                     {isToday(new Date(data.date)) ? "Today" : new Date(data.date).setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0) ? "Upcoming" : "Expired"}
                 </Badge>
@@ -225,7 +226,7 @@ const Reservation = () => {
                                     <SelectValue placeholder="Number of people" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {[...Array(9)].map((x, i) =>
+                                    {[...Array<number>(9)].map((x, i) =>
                                         <SelectItem key={i} value={(i + 1).toString()}>{i === 8 ? i + 1 + '+' : i + 1}</SelectItem>
                                     )}
                                 </SelectContent>
